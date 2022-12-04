@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: goapp-deployment
+  namespace: lesson16
+  labels:
+    app: goapp
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: goapp
+  template:
+    metadata:
+      labels:
+        app: goapp
+    spec:
+      containers:
+        - name: web
+          image: wwwroman5/lesson1:v0.2
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: secret-volume
+              mountPath: "/usr/secrets/"
+              readOnly: true
+            - name: cm-volume
+              mountPath: "/etc/ssl/certs/"
+              readOnly: true
+            - name: cache-volume
+              mountPath: /cache
+          env:
+            - name: SECRETENV
+              valueFrom:
+                secretKeyRef:
+                  name: first-secret
+                  key: password
+            - name: COLORGOOD
+              valueFrom:
+                configMapKeyRef:
+                  name: env-cm
+                  key: colorgood
+            - name: COLORBAD
+              valueFrom:
+                configMapKeyRef:
+                  name: env-cm
+                  key: colorbad
+      volumes:
+        - name: secret-volume
+          secret:
+            secretName: first-secret
+        - name: cm-volume
+          configMap:
+            name: test-config
+        - name: cache-volume
+          emptyDir: {}
